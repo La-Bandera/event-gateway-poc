@@ -14,8 +14,8 @@ POST /ingest ──▶ Kafka (edge.events.raw) ──▶ Camel route (transform)
 
 - **Quarkus** 3.39 — Red Hat's cloud-native Java runtime.
 - **Apache Camel** (via `camel-quarkus-kafka`) — the integration/routing layer.
-- **AMQ Streams** (Red Hat's distribution of [Strimzi](https://strimzi.io/), running Kafka) — the event backbone, deployed on OpenShift.
-- **OpenShift Pipelines** (Tekton) — builds and deploys this repo to the [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox).
+- **Kafka via [Strimzi](https://strimzi.io/)** — the event backbone, deployed on OpenShift. Run directly from the upstream Strimzi Kafka image rather than through the AMQ Streams operator: the free [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox) tier doesn't permit installing new cluster operators (no OperatorGroup provisioning available to Sandbox accounts, via CLI or console) — so this is the open-source foundation AMQ Streams is built on, hand-configured, same substance without the managed operator layer.
+- **OpenShift's native BuildConfig (Source-to-Image)** builds and deploys this repo — OpenShift Pipelines (Tekton) is, like AMQ Streams, an operator-gated add-on unavailable on this tier.
 
 Deployed in **JVM mode**, not GraalVM native — the Sandbox's free-tier resource budget (~4 vCPU / ~7 GB total) comfortably fits a single-broker KRaft Kafka cluster plus this application in JVM mode, so native compilation isn't needed and isn't worth its added build risk under a compressed timeline. See `docs/` (added by the deployment) for the resource math.
 
@@ -33,7 +33,7 @@ This starts the application on `http://localhost:8080`. Note: the Kafka-consumin
 ./mvnw test
 ```
 
-The test suite runs without any external infrastructure: `gateway.kafka-route.enabled=false` in the `test` profile means the Kafka consumer route never starts and the publisher never tries to connect, so the transform logic and the REST layer are both fully unit-tested in isolation. **End-to-end Kafka delivery is verified against the live, deployed AMQ Streams cluster on OpenShift** — not reproduced here with a Testcontainers broker — because the point of this PoC is a real deployment, not a simulated one.
+The test suite runs without any external infrastructure: `gateway.kafka-route.enabled=false` in the `test` profile means the Kafka consumer route never starts and the publisher never tries to connect, so the transform logic and the REST layer are both fully unit-tested in isolation. **End-to-end Kafka delivery is verified against the live, deployed Kafka cluster on OpenShift** — not reproduced here with a Testcontainers broker — because the point of this PoC is a real deployment, not a simulated one.
 
 ## API
 
@@ -45,7 +45,7 @@ The test suite runs without any external infrastructure: `gateway.kafka-route.en
 
 ## Portability note
 
-This deploys to Red Hat's free Developer Sandbox, which runs on AWS — that's simply where the free trial happens to be hosted, and is irrelevant to the architecture. What matters: this is built entirely on OpenShift primitives (standard Kubernetes manifests, AMQ Streams/Strimzi, OpenShift Pipelines), so it lifts and shifts with no rework to Google Kubernetes Engine or Red Hat OpenShift on Google Cloud Dedicated when it's time to run this for a client.
+This deploys to Red Hat's free Developer Sandbox, which runs on AWS — that's simply where the free trial happens to be hosted, and is irrelevant to the architecture. What matters: this is built entirely on OpenShift/Kubernetes primitives (standard manifests, Strimzi-based Kafka, OpenShift's native BuildConfig), so it lifts and shifts with no rework to Google Kubernetes Engine or Red Hat OpenShift on Google Cloud Dedicated when it's time to run this for a client — and on a client's own cluster with proper permissions, the AMQ Streams operator and OpenShift Pipelines would be the natural upgrade path from what's running here.
 
 ## Status
 
