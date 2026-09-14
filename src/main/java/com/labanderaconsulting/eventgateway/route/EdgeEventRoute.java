@@ -4,6 +4,7 @@ import com.labanderaconsulting.eventgateway.EventJournal;
 import com.labanderaconsulting.eventgateway.model.EdgeEvent;
 import com.labanderaconsulting.eventgateway.model.ProcessedEvent;
 import com.labanderaconsulting.eventgateway.transform.EventTransformer;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
@@ -22,7 +23,14 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * unit/component tests can boot the application context without requiring a
  * reachable Kafka broker; it is {@code true} by default and disabled only in
  * the {@code test} profile (see {@code application.properties}).
+ * <p>
+ * Needs an explicit CDI scope: Quarkus's default annotation-based bean
+ * discovery only finds classes with a bean-defining annotation, and without
+ * one this class was silently never instantiated -- Camel Quarkus never saw
+ * it, so its route was never registered ({@code Routes startup (total:0)}
+ * at boot, with no error) despite {@code gateway.kafka-route.enabled=true}.
  */
+@ApplicationScoped
 public class EdgeEventRoute extends RouteBuilder {
 
     @Inject
