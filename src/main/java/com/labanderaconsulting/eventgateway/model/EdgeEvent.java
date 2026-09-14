@@ -1,5 +1,7 @@
 package com.labanderaconsulting.eventgateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ public record EdgeEvent(String id, String source, String type, Map<String, Objec
     /**
      * @return true if every field required for the event to be routable is present.
      */
+    @JsonIgnore
     public boolean isValid() {
         return isNonBlank(id) && isNonBlank(source) && isNonBlank(type);
     }
