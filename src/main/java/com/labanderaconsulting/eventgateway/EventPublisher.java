@@ -28,6 +28,9 @@ public class EventPublisher {
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    EventJournal journal;
+
     @ConfigProperty(name = "gateway.topic.in")
     String topicIn;
 
@@ -43,5 +46,6 @@ public class EventPublisher {
         }
         String json = objectMapper.writeValueAsString(event);
         producerTemplate.sendBody("kafka:" + topicIn + "?brokers=" + brokers, json);
+        journal.recordRaw(event);
     }
 }

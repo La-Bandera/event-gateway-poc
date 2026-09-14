@@ -1,5 +1,6 @@
 package com.labanderaconsulting.eventgateway.route;
 
+import com.labanderaconsulting.eventgateway.EventJournal;
 import com.labanderaconsulting.eventgateway.model.EdgeEvent;
 import com.labanderaconsulting.eventgateway.model.ProcessedEvent;
 import com.labanderaconsulting.eventgateway.transform.EventTransformer;
@@ -26,6 +27,9 @@ public class EdgeEventRoute extends RouteBuilder {
 
     @Inject
     EventTransformer transformer;
+
+    @Inject
+    EventJournal journal;
 
     @ConfigProperty(name = "gateway.topic.in")
     String topicIn;
@@ -54,6 +58,7 @@ public class EdgeEventRoute extends RouteBuilder {
                 .process(exchange -> {
                     EdgeEvent raw = exchange.getIn().getBody(EdgeEvent.class);
                     ProcessedEvent processed = transformer.transform(raw);
+                    journal.recordProcessed(processed);
                     exchange.getIn().setBody(processed);
                 })
                 .marshal().json(JsonLibrary.Jackson)
